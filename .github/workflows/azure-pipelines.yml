@@ -1,0 +1,35 @@
+# Docker
+# Build and push an image to Azure Container Registry --testing
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+on:
+  pull_request:
+      types: [closed]
+      branches:
+          - prod
+permissions: write-all
+jobs:
+    build:
+        if: github.event.pull_request.merged == true
+        name: Deploy to Production
+        runs-on: ubuntu-latest
+        outputs:
+          deploymentSHA: ${{ steps.deploy.outputs.deploymentSHA }}
+          workflowStartTimne: ${{ steps.deploy.outputs.workflowStartTimne }}
+        continue-on-error: false
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  ref: prod
+            - uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+            - id: deploy
+              uses: anthonychu/azure-webapps-deno-deploy@v0.3.0
+              with: 
+                app-name: denodockerprototype
+                resource-group: denodockerprototype
+                package: app.zip
+                script-file: server.bundle.js
+                deno-version: "1.2.0"
+ 
+  
